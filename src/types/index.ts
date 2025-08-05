@@ -1,17 +1,14 @@
-// API Response types
 export interface ApiResponse<T> {
   data?: T
   message?: string
   error?: string
 }
 
-// Error type for catch blocks
 export interface ApiError {
   message: string
   status?: number
 }
 
-// Entity types based on backend entities
 export interface Parent {
   id: number
   name: string
@@ -23,7 +20,7 @@ export interface Parent {
 export interface Student {
   id: number
   name: string
-  dob: string // Date as string from API
+  dob: string
   gender: string
   current_grade: string
   parent_id: number
@@ -62,7 +59,6 @@ export interface Subscription {
   student?: Student
 }
 
-// DTO types for creating/updating
 export interface CreateParentDto {
   name: string
   phone: string

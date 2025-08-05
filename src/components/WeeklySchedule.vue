@@ -1,3 +1,161 @@
+<script setup lang="ts">
+import { ref, computed, onMounted } from 'vue'
+import type { Class } from '@/types'
+import { DAYS_OF_WEEK, type DayOfWeek } from '@/types'
+import { useClassesStore } from '@/stores/classes'
+import { useStudentsStore } from '@/stores/students'
+
+// Props
+interface Props {
+  canRegisterStudent?: boolean
+}
+
+const props = withDefaults(defineProps<Props>(), {
+  canRegisterStudent: false,
+})
+
+// Emits
+const emit = defineEmits<{
+  classSelected: [classItem: Class]
+  studentRegistered: [classId: number, studentId: number]
+}>()
+
+// Stores
+const classesStore = useClassesStore()
+const studentsStore = useStudentsStore()
+
+// State
+const loading = ref(false)
+const error = ref<string | null>(null)
+const registering = ref(0)
+const registrationError = ref<string | null>(null)
+
+// Week navigation
+const currentWeekStart = ref(new Date())
+
+// Modal state
+const showRegistrationModal = ref(false)
+const selectedClass = ref<Class | null>(null)
+const selectedStudentId = ref<number | null>(null)
+
+// Computed
+const getDayClasses = computed(() => {
+  return (day: DayOfWeek) => classesStore.getClassesByDay(day)
+})
+
+const currentWeekDisplay = computed(() => {
+  const start = new Date(currentWeekStart.value)
+  const end = new Date(start)
+  end.setDate(start.getDate() + 6)
+
+  return `${start.toLocaleDateString()} - ${end.toLocaleDateString()}`
+})
+
+// Methods
+const getDateForDay = (day: DayOfWeek) => {
+  const dayIndex = DAYS_OF_WEEK.indexOf(day)
+  const date = new Date(currentWeekStart.value)
+  date.setDate(currentWeekStart.value.getDate() + dayIndex)
+  return date.toLocaleDateString('en-US', { month: 'short', day: 'numeric' })
+}
+
+const getClassCurrentStudents = (classId: number) =>
+  classesStore.getClassById(classId)?.registrations?.length || 0
+
+const getAvailableSpots = (classItem: Class | null) => {
+  if (!classItem) return 0
+  const current = getClassCurrentStudents(classItem.id)
+  return Math.max(0, classItem.max_students - current)
+}
+
+const fetchSchedule = async () => {
+  loading.value = true
+  error.value = null
+
+  try {
+    await classesStore.fetchAllClasses()
+  } catch (err: unknown) {
+    error.value = (err as Error).message || 'Failed to load schedule'
+  } finally {
+    loading.value = false
+  }
+}
+
+const previousWeek = () => {
+  const newDate = new Date(currentWeekStart.value)
+  newDate.setDate(newDate.getDate() - 7)
+  currentWeekStart.value = newDate
+}
+
+const nextWeek = () => {
+  const newDate = new Date(currentWeekStart.value)
+  newDate.setDate(newDate.getDate() + 7)
+  currentWeekStart.value = newDate
+}
+
+const handleRegisterClick = (classItem: Class) => {
+  if (getAvailableSpots(classItem) <= 0) {
+    alert('This class is full!')
+    return
+  }
+
+  selectedClass.value = classItem
+  selectedStudentId.value = null
+  registrationError.value = null
+  showRegistrationModal.value = true
+}
+
+const closeRegistrationModal = () => {
+  showRegistrationModal.value = false
+  selectedClass.value = null
+  selectedStudentId.value = null
+  registrationError.value = null
+}
+
+const confirmRegistration = async () => {
+  if (!selectedClass.value || !selectedStudentId.value) return
+
+  registering.value = selectedClass.value.id
+  registrationError.value = null
+
+  try {
+    await classesStore.registerStudentToClass(selectedClass.value.id, {
+      student_id: selectedStudentId.value,
+    })
+
+    emit('studentRegistered', selectedClass.value.id, selectedStudentId.value)
+    closeRegistrationModal()
+
+    // Show success message
+    alert(`Student successfully registered to ${selectedClass.value.name}!`)
+  } catch (err: unknown) {
+    registrationError.value = (err as Error).message || 'Failed to register student'
+  } finally {
+    registering.value = 0
+  }
+}
+
+// Initialize current week to start of this week (Monday)
+const initializeWeek = () => {
+  const today = new Date()
+  const dayOfWeek = today.getDay()
+  const daysToMonday = dayOfWeek === 0 ? 6 : dayOfWeek - 1 // Sunday = 0, Monday = 1
+
+  currentWeekStart.value = new Date(today)
+  currentWeekStart.value.setDate(today.getDate() - daysToMonday)
+}
+
+// Load data on mount
+onMounted(async () => {
+  initializeWeek()
+  await fetchSchedule()
+
+  if (props.canRegisterStudent && studentsStore.students.length === 0) {
+    await studentsStore.fetchAllStudents()
+  }
+})
+</script>
+
 <template>
   <div class="weekly-schedule">
     <div class="schedule-header">
@@ -118,168 +276,6 @@
   </div>
 </template>
 
-<script setup lang="ts">
-import { ref, computed, onMounted } from 'vue'
-import type { Class } from '@/types'
-import { DAYS_OF_WEEK, type DayOfWeek } from '@/types'
-import { useClassesStore } from '@/stores/classes'
-import { useStudentsStore } from '@/stores/students'
-
-// Props
-interface Props {
-  canRegisterStudent?: boolean
-}
-
-const props = withDefaults(defineProps<Props>(), {
-  canRegisterStudent: false,
-})
-
-// Emits
-const emit = defineEmits<{
-  classSelected: [classItem: Class]
-  studentRegistered: [classId: number, studentId: number]
-}>()
-
-// Stores
-const classesStore = useClassesStore()
-const studentsStore = useStudentsStore()
-
-// State
-const loading = ref(false)
-const error = ref<string | null>(null)
-const registering = ref(0)
-const registrationError = ref<string | null>(null)
-
-// Week navigation
-const currentWeekStart = ref(new Date())
-
-// Modal state
-const showRegistrationModal = ref(false)
-const selectedClass = ref<Class | null>(null)
-const selectedStudentId = ref<number | null>(null)
-
-// Computed
-const getDayClasses = computed(() => {
-  return (day: DayOfWeek) => classesStore.getClassesByDay(day)
-})
-
-const currentWeekDisplay = computed(() => {
-  const start = new Date(currentWeekStart.value)
-  const end = new Date(start)
-  end.setDate(start.getDate() + 6)
-
-  return `${start.toLocaleDateString()} - ${end.toLocaleDateString()}`
-})
-
-// Methods
-const getDateForDay = (day: DayOfWeek) => {
-  const dayIndex = DAYS_OF_WEEK.indexOf(day)
-  const date = new Date(currentWeekStart.value)
-  date.setDate(currentWeekStart.value.getDate() + dayIndex)
-  return date.toLocaleDateString('en-US', { month: 'short', day: 'numeric' })
-}
-
-const getClassCurrentStudents = (classId: number) => {
-  // This would normally come from the backend
-  // For now, return a deterministic number based on classId for demo
-  const seed = classId * 123
-  return (seed % 8) + 1
-}
-
-const getAvailableSpots = (classItem: Class | null) => {
-  if (!classItem) return 0
-  const current = getClassCurrentStudents(classItem.id)
-  return Math.max(0, classItem.max_students - current)
-}
-
-const fetchSchedule = async () => {
-  loading.value = true
-  error.value = null
-
-  try {
-    await classesStore.fetchAllClasses()
-  } catch (err: unknown) {
-    error.value = (err as Error).message || 'Failed to load schedule'
-  } finally {
-    loading.value = false
-  }
-}
-
-const previousWeek = () => {
-  const newDate = new Date(currentWeekStart.value)
-  newDate.setDate(newDate.getDate() - 7)
-  currentWeekStart.value = newDate
-}
-
-const nextWeek = () => {
-  const newDate = new Date(currentWeekStart.value)
-  newDate.setDate(newDate.getDate() + 7)
-  currentWeekStart.value = newDate
-}
-
-const handleRegisterClick = (classItem: Class) => {
-  if (getAvailableSpots(classItem) <= 0) {
-    alert('This class is full!')
-    return
-  }
-
-  selectedClass.value = classItem
-  selectedStudentId.value = null
-  registrationError.value = null
-  showRegistrationModal.value = true
-}
-
-const closeRegistrationModal = () => {
-  showRegistrationModal.value = false
-  selectedClass.value = null
-  selectedStudentId.value = null
-  registrationError.value = null
-}
-
-const confirmRegistration = async () => {
-  if (!selectedClass.value || !selectedStudentId.value) return
-
-  registering.value = selectedClass.value.id
-  registrationError.value = null
-
-  try {
-    await classesStore.registerStudentToClass(selectedClass.value.id, {
-      student_id: selectedStudentId.value,
-    })
-
-    emit('studentRegistered', selectedClass.value.id, selectedStudentId.value)
-    closeRegistrationModal()
-
-    // Show success message
-    alert(`Student successfully registered to ${selectedClass.value.name}!`)
-  } catch (err: unknown) {
-    registrationError.value = (err as Error).message || 'Failed to register student'
-  } finally {
-    registering.value = 0
-  }
-}
-
-// Initialize current week to start of this week (Monday)
-const initializeWeek = () => {
-  const today = new Date()
-  const dayOfWeek = today.getDay()
-  const daysToMonday = dayOfWeek === 0 ? 6 : dayOfWeek - 1 // Sunday = 0, Monday = 1
-
-  currentWeekStart.value = new Date(today)
-  currentWeekStart.value.setDate(today.getDate() - daysToMonday)
-}
-
-// Load data on mount
-onMounted(async () => {
-  initializeWeek()
-  await fetchSchedule()
-
-  if (props.canRegisterStudent && studentsStore.students.length === 0) {
-    await studentsStore.fetchAllStudents()
-  }
-})
-</script>
-
 <style scoped>
 .weekly-schedule {
   padding: 24px;
@@ -355,8 +351,8 @@ onMounted(async () => {
 }
 
 .day-header {
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-  color: white;
+  background: #f8f9fa;
+  color: #333;
   padding: 16px 12px;
   text-align: center;
 }

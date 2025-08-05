@@ -1,3 +1,33 @@
+<script setup lang="ts">
+import { ref } from 'vue'
+import WeeklySchedule from '@/components/WeeklySchedule.vue'
+import ClassForm from '@/components/ClassForm.vue'
+import type { Class } from '@/types'
+
+// State
+const showCreateForm = ref(false)
+const canRegisterStudent = ref(false)
+
+// Methods
+const handleClassCreated = (classItem: Class) => {
+  showCreateForm.value = false
+}
+
+const handleClassSelected = (classItem: Class) => {
+  if (!canRegisterStudent.value) {
+    console.log('Class selected:', classItem)
+  }
+}
+
+const handleStudentRegistered = (classId: number, studentId: number) => {
+  console.log(`Student ${studentId} registered to class ${classId}`)
+}
+
+const toggleRegistrationMode = () => {
+  canRegisterStudent.value = !canRegisterStudent.value
+}
+</script>
+
 <template>
   <div class="classes-view">
     <div class="page-header">
@@ -39,41 +69,6 @@
     </div>
   </div>
 </template>
-
-<script setup lang="ts">
-import { ref } from 'vue'
-import WeeklySchedule from '@/components/WeeklySchedule.vue'
-import ClassForm from '@/components/ClassForm.vue'
-import type { Class } from '@/types'
-
-// State
-const showCreateForm = ref(false)
-const canRegisterStudent = ref(false)
-
-// Methods
-const handleClassCreated = (classItem: Class) => {
-  showCreateForm.value = false
-  console.log('Class created:', classItem)
-  // The WeeklySchedule component will automatically refresh and show the new class
-}
-
-const handleClassSelected = (classItem: Class) => {
-  if (!canRegisterStudent.value) {
-    // If not in registration mode, could navigate to class details
-    console.log('Class selected:', classItem)
-  }
-  // In registration mode, the WeeklySchedule component handles the registration modal
-}
-
-const handleStudentRegistered = (classId: number, studentId: number) => {
-  console.log(`Student ${studentId} registered to class ${classId}`)
-  // Could show a success notification here
-}
-
-const toggleRegistrationMode = () => {
-  canRegisterStudent.value = !canRegisterStudent.value
-}
-</script>
 
 <style scoped>
 .classes-view {
