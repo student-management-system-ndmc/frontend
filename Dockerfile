@@ -21,10 +21,10 @@ COPY --from=development-dependencies /app/node_modules ./node_modules
 RUN pnpm build
 
 # ===production stage===
-FROM oven/bun:alpine
+FROM node:22-alpine
 WORKDIR /app
 
-RUN bun add -g serve
+RUN npm add -g serve
 COPY --from=production-dependencies /app/node_modules ./node_modules
 COPY --from=build /app/dist ./dist
-CMD ["serve","-s", "dist", "-p", "7000"]
+CMD ["serve","-s", "dist", "-p", "3001"]
