@@ -15,9 +15,19 @@ const router = createRouter({
       component: () => import('../views/ParentsView.vue'),
     },
     {
+      path: '/parents/:id',
+      name: 'parent-detail',
+      component: () => import('../views/ParentDetailView.vue'),
+    },
+    {
       path: '/students',
       name: 'students',
       component: () => import('../views/StudentsView.vue'),
+    },
+    {
+      path: '/students/:id',
+      name: 'student-detail',
+      component: () => import('../views/StudentDetailView.vue'),
     },
     {
       path: '/classes',
@@ -28,6 +38,11 @@ const router = createRouter({
       path: '/subscriptions',
       name: 'subscriptions',
       component: () => import('../views/SubscriptionsView.vue'),
+    },
+    {
+      path: '/subscriptions/:id',
+      name: 'subscription-detail',
+      component: () => import('../views/SubscriptionDetailView.vue'),
     },
   ],
 })

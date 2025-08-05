@@ -77,9 +77,8 @@ const toggleRegistrationMode = () => {
 
 <style scoped>
 .classes-view {
-  max-width: 1400px;
-  margin: 0 auto;
-  padding: 20px;
+  width: 100%;
+  padding: 0;
 }
 
 .page-header {

@@ -1,40 +1,30 @@
 <script setup lang="ts">
-import { RouterLink, RouterView } from 'vue-router'
+const navLinks = [
+  { to: '/', label: 'Dashboard' },
+  { to: '/parents', label: 'Parents' },
+  { to: '/students', label: 'Students' },
+  { to: '/classes', label: 'Classes' },
+  { to: '/subscriptions', label: 'Subscriptions' },
+]
 </script>
 
 <template>
   <div id="app">
-    <header class="app-header">
+    <header class="header">
       <div class="header-content">
-        <div class="logo-section">
-          <h1 class="app-title">
-            <RouterLink to="/" class="title-link"> 📚 Student Management </RouterLink>
-          </h1>
-        </div>
+        <RouterLink to="/" class="logo"> Student Management </RouterLink>
 
-        <nav class="main-nav">
-          <RouterLink to="/" class="nav-link" exact-active-class="active"> 🏠 Home </RouterLink>
-          <RouterLink to="/parents" class="nav-link" active-class="active"> 👨‍👩‍👧‍👦 Parents </RouterLink>
-          <RouterLink to="/students" class="nav-link" active-class="active">
-            🎓 Students
-          </RouterLink>
-          <RouterLink to="/classes" class="nav-link" active-class="active"> 📚 Classes </RouterLink>
-          <RouterLink to="/subscriptions" class="nav-link" active-class="active">
-            📋 Subscriptions
+        <nav class="nav">
+          <RouterLink v-for="link in navLinks" :key="link.to" :to="link.to" class="nav-link">
+            {{ link.label }}
           </RouterLink>
         </nav>
       </div>
     </header>
 
-    <main class="app-main">
+    <main class="main">
       <RouterView />
     </main>
-
-    <footer class="app-footer">
-      <div class="footer-content">
-        <p>&copy; 2024 Student Management System. Built with Vue 3 & TypeScript.</p>
-      </div>
-    </footer>
   </div>
 </template>
 
@@ -45,133 +35,106 @@ import { RouterLink, RouterView } from 'vue-router'
   flex-direction: column;
 }
 
-.app-header {
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-  color: white;
-  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+/* Simple Header */
+.header {
+  background: white;
+  border-bottom: 1px solid #e0e0e0;
   position: sticky;
   top: 0;
-  z-index: 100;
+  z-index: 10;
 }
 
 .header-content {
   max-width: 1200px;
   margin: 0 auto;
-  padding: 0 20px;
+  padding: 0 1rem;
   display: flex;
   justify-content: space-between;
   align-items: center;
-  min-height: 70px;
+  height: 4rem;
 }
 
-.logo-section {
-  flex-shrink: 0;
-}
-
-.app-title {
-  margin: 0;
-  font-size: 1.5rem;
-  font-weight: 700;
-}
-
-.title-link {
-  color: white;
+.logo {
+  font-size: 1.25rem;
+  font-weight: 600;
+  color: #333;
   text-decoration: none;
-  transition: opacity 0.2s;
 }
 
-.title-link:hover {
-  opacity: 0.9;
+.logo:hover {
+  color: #0066cc;
 }
 
-.main-nav {
+.nav {
   display: flex;
-  gap: 8px;
-  align-items: center;
+  gap: 0.5rem;
 }
 
 .nav-link {
-  color: white;
+  padding: 0.5rem 1rem;
+  color: #666;
   text-decoration: none;
-  padding: 10px 16px;
-  border-radius: 6px;
-  font-weight: 500;
-  font-size: 14px;
+  border-radius: 0.25rem;
+  font-size: 0.875rem;
   transition: all 0.2s;
-  opacity: 0.9;
 }
 
 .nav-link:hover {
-  background: rgba(255, 255, 255, 0.1);
-  opacity: 1;
+  background: #f5f5f5;
+  color: #333;
 }
 
-.nav-link.active {
-  background: rgba(255, 255, 255, 0.2);
-  opacity: 1;
-  font-weight: 600;
-}
-
-.app-main {
-  flex: 1;
-  background: #f8f9fa;
-  min-height: calc(100vh - 70px - 60px); /* header height - footer height */
-}
-
-.app-footer {
-  background: #2c3e50;
+.nav-link.router-link-active {
+  background: #0066cc;
   color: white;
-  padding: 20px 0;
-  margin-top: auto;
 }
 
-.footer-content {
+/* Main Content */
+.main {
+  flex: 1;
   max-width: 1200px;
   margin: 0 auto;
-  padding: 0 20px;
-  text-align: center;
+  width: 100%;
+  padding: 2rem 1rem;
 }
 
-.footer-content p {
-  margin: 0;
-  font-size: 14px;
-  opacity: 0.8;
-}
-
+/* Responsive */
 @media (max-width: 768px) {
   .header-content {
     flex-direction: column;
-    gap: 16px;
-    min-height: auto;
-    padding: 16px 20px;
+    height: auto;
+    padding: 1rem;
+    gap: 1rem;
   }
 
-  .main-nav {
+  .nav {
     flex-wrap: wrap;
     justify-content: center;
-    gap: 4px;
+    gap: 0.25rem;
   }
 
   .nav-link {
-    padding: 8px 12px;
-    font-size: 13px;
+    padding: 0.375rem 0.75rem;
+    font-size: 0.8rem;
   }
 
-  .app-title {
-    font-size: 1.3rem;
+  .main {
+    padding: 1rem 0.75rem;
   }
 }
 
 @media (max-width: 480px) {
-  .main-nav {
-    width: 100%;
+  .logo {
+    font-size: 1.125rem;
   }
 
   .nav-link {
-    flex: 1;
-    text-align: center;
-    padding: 8px 4px;
-    font-size: 12px;
+    padding: 0.25rem 0.5rem;
+    font-size: 0.75rem;
+  }
+
+  .main {
+    padding: 0.75rem 0.5rem;
   }
 }
 </style>

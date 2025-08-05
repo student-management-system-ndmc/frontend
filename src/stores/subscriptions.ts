@@ -129,6 +129,31 @@ export const useSubscriptionsStore = defineStore('subscriptions', () => {
     }
   }
 
+  const extendSessions = async (id: number, additionalSessions: number) => {
+    loading.value = true
+    error.value = null
+    try {
+      const updatedSubscription = await ApiService.extendSubscriptionSessions(
+        id,
+        additionalSessions,
+      )
+
+      // Update in subscriptions array
+      const existingIndex = subscriptions.value.findIndex((s) => s.id === id)
+      if (existingIndex >= 0) {
+        subscriptions.value[existingIndex] = updatedSubscription
+      }
+
+      return updatedSubscription
+    } catch (err: unknown) {
+      error.value = (err as Error).message || 'Failed to extend subscription'
+      console.error('Error extending subscription:', err)
+      throw err
+    } finally {
+      loading.value = false
+    }
+  }
+
   const clearError = () => {
     error.value = null
   }
@@ -150,6 +175,7 @@ export const useSubscriptionsStore = defineStore('subscriptions', () => {
     fetchSubscriptionsByStudent,
     createSubscription,
     useSession,
+    extendSessions,
     clearError,
   }
 })

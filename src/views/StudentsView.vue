@@ -112,6 +112,12 @@
 
             <div class="subscription-actions">
               <button
+                @click="viewSubscriptionDetails(subscription.id)"
+                class="btn btn-sm btn-secondary"
+              >
+                View Details
+              </button>
+              <button
                 v-if="subscription.used_sessions < subscription.total_sessions"
                 @click="useSubscriptionSession(subscription.id)"
                 class="btn btn-sm btn-warning"
@@ -204,6 +210,10 @@ const closeSubscriptionModal = () => {
   studentSubscriptions.value = []
 }
 
+const viewSubscriptionDetails = (subscriptionId: number) => {
+  router.push(`/subscriptions/${subscriptionId}`)
+}
+
 const createSubscriptionForStudent = () => {
   if (selectedStudent.value) {
     router.push(`/subscriptions?student_id=${selectedStudent.value.id}`)
@@ -216,10 +226,15 @@ const useSubscriptionSession = async (subscriptionId: number) => {
   try {
     const updatedSubscription = await subscriptionsStore.useSession(subscriptionId)
 
-    // Update local subscriptions list
+    // Force reactive update using array replacement
     const index = studentSubscriptions.value.findIndex((s) => s.id === subscriptionId)
     if (index >= 0) {
-      studentSubscriptions.value[index] = updatedSubscription
+      // Create new array to trigger reactivity
+      studentSubscriptions.value = [
+        ...studentSubscriptions.value.slice(0, index),
+        updatedSubscription,
+        ...studentSubscriptions.value.slice(index + 1),
+      ]
     }
   } catch (error) {
     console.error('Error using session:', error)
@@ -261,9 +276,8 @@ onMounted(async () => {
 
 <style scoped>
 .students-view {
-  max-width: 1200px;
-  margin: 0 auto;
-  padding: 20px;
+  width: 100%;
+  padding: 0;
 }
 
 .page-header {

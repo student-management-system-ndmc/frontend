@@ -91,9 +91,8 @@ onMounted(async () => {
 
 <style scoped>
 .home {
-  max-width: 1200px;
-  margin: 0 auto;
-  padding: 20px;
+  width: 100%;
+  padding: 0;
 }
 
 .hero-section {

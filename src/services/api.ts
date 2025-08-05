@@ -106,6 +106,19 @@ export class ApiService {
     const response: AxiosResponse<Subscription> = await api.patch(`/api/subscriptions/${id}/use`)
     return response.data
   }
+
+  static async extendSubscriptionSessions(
+    id: number,
+    additionalSessions: number,
+  ): Promise<Subscription> {
+    const response: AxiosResponse<Subscription> = await api.patch(
+      `/api/subscriptions/${id}/extend`,
+      {
+        additional_sessions: additionalSessions,
+      },
+    )
+    return response.data
+  }
 }
 
 export default ApiService

@@ -193,13 +193,14 @@
 
 <script setup lang="ts">
 import { ref, computed, onMounted } from 'vue'
-import { useRoute } from 'vue-router'
+import { useRoute, useRouter } from 'vue-router'
 import { useSubscriptionsStore } from '@/stores/subscriptions'
 import { useStudentsStore } from '@/stores/students'
 import type { CreateSubscriptionDto, Subscription } from '@/types'
 
 // Route
 const route = useRoute()
+const router = useRouter()
 
 // Stores
 const subscriptionsStore = useSubscriptionsStore()
@@ -322,6 +323,9 @@ const useSubscriptionSession = async (subscriptionId: number) => {
 
   try {
     await subscriptionsStore.useSession(subscriptionId)
+
+    // Force refresh the entire subscriptions list to ensure reactivity
+    await subscriptionsStore.fetchAllSubscriptions()
   } catch (error) {
     console.error('Error using session:', error)
   } finally {
@@ -330,8 +334,7 @@ const useSubscriptionSession = async (subscriptionId: number) => {
 }
 
 const viewSubscriptionDetails = (subscriptionId: number) => {
-  console.log('View details for subscription:', subscriptionId)
-  // Could navigate to a detailed view or show a modal
+  router.push(`/subscriptions/${subscriptionId}`)
 }
 
 // Load data on mount
@@ -349,9 +352,8 @@ onMounted(async () => {
 
 <style scoped>
 .subscriptions-view {
-  max-width: 1200px;
-  margin: 0 auto;
-  padding: 20px;
+  width: 100%;
+  padding: 0;
 }
 
 .page-header {
