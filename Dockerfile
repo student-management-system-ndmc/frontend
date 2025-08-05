@@ -1,33 +1,30 @@
-# Build stage
-FROM node:18-alpine as build-stage
-
+FROM node:22-alpine AS base
 WORKDIR /app
+RUN corepack enable 
+COPY package.json pnpm-lock.yaml ./
 
-# Copy package files
-COPY package*.json ./
-COPY pnpm-lock.yaml ./
-
-# Install pnpm and dependencies
-RUN npm install -g pnpm
+# ===development dependencies===
+FROM base AS development-dependencies
+WORKDIR /app
 RUN pnpm install
 
-# Copy source code
+# ===production dependencies===
+FROM base AS production-dependencies
+WORKDIR /app
+RUN pnpm install --production
+
+# ===build stage===
+FROM base AS build
+WORKDIR /app
 COPY . .
+COPY --from=development-dependencies /app/node_modules ./node_modules
+RUN pnpm build
 
-# Build the application
-RUN pnpm run build
+# ===production stage===
+FROM oven/bun:alpine
+WORKDIR /app
 
-# Production stage
-FROM nginx:alpine as production-stage
-
-# Copy built assets from build stage
-COPY --from=build-stage /app/dist /usr/share/nginx/html
-
-# Copy custom nginx config
-COPY nginx.conf /etc/nginx/nginx.conf
-
-# Expose port 80
-EXPOSE 80
-
-# Start nginx
-CMD ["nginx", "-g", "daemon off;"]
+RUN bun add -g serve
+COPY --from=production-dependencies /app/node_modules ./node_modules
+COPY --from=build /app/dist ./dist
+CMD ["serve","-s", "dist", "-p", "7000"]
